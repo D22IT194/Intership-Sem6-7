@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connect Four</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+
+    .container {
+      margin: auto;
+      max-width: 600px;
+    }
+
+    .board {
+      display: flex;
+      flex-wrap: wrap;
+      width: 420px;
+      margin: 20px auto;
+      border: 2px solid #333;
+    }
+
+    .cell {
+      width: 60px;
+      height: 60px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      cursor: pointer;
+    }
+
+    .cell:hover {
+      background-color: #f0f0f0;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Connect Four</h1>
+    <div id="board" class="board"></div>
+    <button id="resetButton">Reset Game</button>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const ROWS = 6;
+      const COLS = 7;
+      const board = document.getElementById('board');
+      const resetButton = document.getElementById('resetButton');
+      let currentPlayer = 'red';
+      let gameActive = true;
+      const grid = [];
+
+      // Create the grid
+      for (let row = 0; row < ROWS; row++) {
+        grid[row] = [];
+        for (let col = 0; col < COLS; col++) {
+          const cell = document.createElement('div');
+          cell.classList.add('cell');
+          cell.dataset.row = row;
+          cell.dataset.col = col;
+          board.appendChild(cell);
+          grid[row][col] = cell;
+        }
+      }
+
+      // Event listener for cell click
+      board.addEventListener('click', handleCellClick);
+
+      // Event listener for reset button
+      resetButton.addEventListener('click', resetGame);
+
+      // Handle cell click event
+      function handleCellClick(e) {
+        if (!gameActive) return;
+        const col = parseInt(e.target.dataset.col);
+        const row = dropPiece(col);
+        if (row === null) return;
+        const winner = checkForWin(row, col);
+        if (winner) {
+          gameActive = false;
+          setTimeout(() => alert(`Player ${currentPlayer.toUpperCase()} wins!`), 100);
+        } else if (checkForDraw()) {
+          gameActive = false;
+          setTimeout(() => alert("It's a draw!"), 100);
+        } else {
+          currentPlayer = currentPlayer === 'red' ? 'yellow' : 'red';
+        }
+      }
+
+      // Drop a piece in the column
+      function dropPiece(col) {
+        for (let row = ROWS - 1; row >= 0; row--) {
+          if (!grid[row][col].classList.contains('red') && !grid[row][col].classList.contains('yellow')) {
+            grid[row][col].classList.add(currentPlayer);
+            return row;
+          }
+        }
+        return null; // Column is full
+      }
+
+      // Check for a win
+      function checkForWin(row, col) {
+        const directions = [
+          [0, 1],  // Horizontal
+          [1, 0],  // Vertical
+          [1, 1],  // Diagonal \
+          [-1, 1]  // Diagonal /
+        ];
+
+        for (const dir of directions) {
+          let count = 1;
+          for (let i = 1; i < 4; i++) {
+            const r = row + dir[0] * i;
+            const c = col + dir[1] * i;
+            if (r < 0 || r >= ROWS || c < 0 || c >= COLS) break;
+            if (grid[r][c].classList.contains(currentPlayer)) {
+              count++;
+            } else {
+              break;
+            }
+          }
+          if (count === 4) return true;
+        }
+        return false;
+      }
+
+      // Check for a draw
+      function checkForDraw() {
+        return grid.every(row => row.every(cell => cell.classList.contains('red') || cell.classList.contains('yellow')));
+      }
+
+      // Reset the game
+      function resetGame() {
+        grid.forEach(row => row.forEach(cell => {
+          cell.classList.remove('red', 'yellow');
+        }));
+        currentPlayer = 'red';
+        gameActive = true;
+      }
+    });
+  </script>
+</body>
+</html>
